@@ -1,0 +1,4 @@
+[Project]
+Name=mzt
+Manager=KDevCMakeManager
+VersionControl=kdevgit

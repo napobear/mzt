@@ -1,0 +1,1551 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta content="text/html; charset=windows-1252" http-equiv="content-type">
+    <title>D52 Disassembler User's Manual</title>
+  </head>
+  <body> <br>
+    <div align="center"> MDZ80 Z80 Disassembler Manual <br>
+      <br>
+      <div style="text-align: left;"><em>Introduction</em></div>
+    </div>
+    The mdz80 disassembler allows the user to specify memory areas as code,
+    binary data (8 or 16 bit), ascii text, address tables, or data that should
+    be ignored (not disassembled). You may specify such areas in an ascii text
+    file with the same name as the file to be disassembled, but with an
+    extension of <em>ctl</em> (for example: program.ctl controls the
+    disassembly of program.hex or program.bin). <br>
+    <br>
+    With the use of a control file, you can, by an iterative process, get a
+    progressively more meaningful disassembly by modifying the control file
+    based on examination of the output of previous runs of the disassembler. You
+    can also specify names for labels and symbols in the control file, resulting
+    in a much more readable source file. <br>
+    <br>
+    Labels and symbols may have as many characters as will fit in one line of
+    the control file, but some cross assemblers (and especially cross linkers)
+    will truncate any more than some fixed number of characters. Consult your
+    cross development tool documentation. Labels and symbols are not case
+    sensitive. <br>
+    <br>
+    The control file may exist in either the current directory or the directory
+    of the file to be disassembled. If it is in both directories, the control
+    file in the current directory will take precedence. The output file will
+    always be placed in the current directory. <br>
+    <br>
+    The getting started section of this document gives some minimal information
+    for users who are eager to try out the disassembler. For best use of the
+    disassembler, however, you should read the sections on command line options
+    and control file directives before proceeding. <br>
+    <br>
+    <em>Getting Started</em> <br>
+    mdz80 is a command line disassembler. To disassemble a file called
+    'program.bin' or 'program.hex', type in (at the command line prompt):
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -d program</td>
+        </tr>
+      </tbody>
+    </table>
+    A control file with the same name as the file to be disassembled, but with
+    an extension of '.ctl' can be created in which you can specify areas of
+    memory to be ascii text, 8-bit binary data, 16-bit binary data, etc. A
+    control file is not necessary for disassembly, but as will be seen, it will
+    provide for a much more complete disassembly. The -t option will cause mdz80
+    to trace and analyze the code before disassembly, and will create a
+    preliminary control file. <br>
+    <br>
+    If a file extension is not provided and neither the -b option nor the -h
+    option is specified on the command line, the disassembler will first search
+    for a hex file and, if it is not found, will then search for a bin file. The
+    disassembler can be forced to look for only one or the other by specifying
+    either the binary or the hex option on the command line:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -db program</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>for the file program.bin, or</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -dh program</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>for the file program.hex</td>
+        </tr>
+      </tbody>
+    </table>
+    If a file extension of '.hex' or '.bin' is provided in the filename (ie:
+    mdz80 test.hex), that is equivalent to using the -h option or -b option. <br>
+    <br>
+    mdz80 will produce a file named 'program.z80' containing the disassembly of
+    the original hex or binary file. It is very useful on the first few
+    disassemblies to use the -d option , which adds a comment field to every
+    line. The comment field contains the hexadecimal address of each
+    instruction, the hex data for each byte in the instruction, and the ascii
+    code for each byte of the instruction. <br>
+    Example:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>(opcode/operands)</td>
+          <td>(address)</td>
+          <td>(data)</td>
+          <td>(ascii)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>JR X0131</td>
+          <td>; 0100</td>
+          <td>18 2F</td>
+          <td>./</td>
+        </tr>
+      </tbody>
+    </table>
+    This makes it easy to spot areas of ascii text or other nonexecutable code,
+    and you can then modify the control file to tell the disassembler that these
+    areas should be treated as some other kind of data on subsequent
+    disassemblies.<br>
+    <br>
+    By examining the output file and then modifying the control file based on
+    the information obtained, you can get a progressively better disassembly of
+    your program. Generally, about half a dozen iterations of the disassembly
+    are enough to produce a very readable source file that can then be modified
+    and reassembled. <br>
+    <br>
+    <em>Command Line Options</em> <br>
+    <br>
+    Options are case sensitive and may be entered in a freeform fashion as long
+    as a dash (-) preceeds any option or group of options:<br>
+    <br>
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -bd filename</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    or<br>
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -d filename -b -o out_file<br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    Command line options are:&nbsp;
+    <h4><em>-a (ascii macro)</em></h4>
+    The A option tells the disassembler to change the db/defb pseudo op to the
+    ascii macro (pseudo op 'ascii' instead of 'db' or 'defb') for areas defined
+    as ascii text. This will cause the disassembler to include a macro
+    definition in the disassembly output file that should expand to 'db' for the
+    cross assembler. To use this option, your cross assembler must be able to
+    handle macros, and in particular, mzmac's macro format. If used in
+    conjunction with the -s option , the -s option must come first on the
+    command line. <br>
+    <br>
+    There are some caveats regarding the ascii macro. The intent of this macro
+    is to make ascii text easier to find in the output file. Once you're
+    satisfied with the readability of the output file, you may want to run the
+    disassembler once more without the -a option to produce a file compatible
+    with your cross assembler. <br>
+    <h4><em>-8 (disassemble 8080 code)</em></h4>
+    Disassembles code using 8080 opcodes instead of Z80 opcodes (that is the
+    default).<br>
+    <h4><em>-b (read binary file)</em></h4>
+    The -b option forces the disassembler to read a binary file (extention
+    '.bin') instead of an Intel hex file (extention .hex). If neither the -b
+    option nor the -h option are specified, the disassembler will first search
+    for a file with an extention of .hex, and if not found, will then search for
+    a binary file with an extention of .bin.&nbsp;
+    <h4><em>-c (control filename)</em></h4>
+    This option lets you specify a filename for the .ctl file to be used,
+    instead of the default that is input filename postfixed with ".ctl".
+    <h4><em>-C (disassemble CP/M .com file)</em></h4>
+    Disassembles a CP/M .com executable file beginning at address 100H. Use of
+    this option will cause mdz80 to look for a file with a .com extension, as
+    opposed to a .bin or .hex extension. This option also sets the offset to
+    100H without the need to do so with the -x option. <br>
+    <h4><em>-d (put data in comment field)</em></h4>
+    The -d option tells the disassembler to include a comment field in each
+    disassembled line. The comment field will contain the hexadecimal address of
+    each instruction, the hex data for each byte in the instruction, and the
+    ascii code for each byte of the instruction. <br>
+    Example: <br>
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>(opcode/operands)</td>
+          <td>(address)</td>
+          <td>(data)</td>
+          <td>(ascii)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>JR X0131<br>
+          </td>
+          <td>; 0100</td>
+          <td>18 2F<br>
+          </td>
+          <td>./</td>
+        </tr>
+      </tbody>
+    </table>
+    This makes it easy to spot areas of ascii text or other nonexecutable code,
+    and then modify the control file to tell the disassembler that these areas
+    should be treated as some other kind of data on subsequent
+    disassemblies.&nbsp;
+    <h4><em>-e (evaluate symbols from asm source)</em></h4>
+    Use this option to feed mdz80 with an assembler source file the contains
+    valid labels, equates and entry points in the context of what you are
+    disassembling. In this way mdz80 will extract a list of symbols to be used
+    in the current disassembly substituting symbols in list with the
+    autogenerated ones.<br>
+    Normally this is to be used in the very first runs of mdz80 in conjunction
+    with -t option to trace code and generate an initial .ctl file that already
+    contains valid labels.&nbsp;
+    <h4><em>-f (use '$' prefixed operands)</em></h4>
+    Use this option to have the disassembler output hexadecimal operands using
+    '$' prefix notation, ie: $cd instead of the default 0cdh.
+    <h4><em>-h (read hexadecimal file)</em></h4>
+    The -h option forces the disassembler to read an Intel hex file (extention
+    '.hex') instead of a binary file (extention '.bin'). If neither the -b
+    option nor the -h option are specified, the disassembler will first search
+    for a file with an extention of '.hex', and if not found, will then search
+    for a binary file with an extention of '.bin'.&nbsp;
+    <h4><em>-l (lowercase case output)</em></h4>
+    Causes labels, symbols, mnemonics, etc to be output in lower case, for cross
+    assemblers that may require lower case code. Comments, literal data values,
+    strings, and other output are not affected by this option.
+    <h4><em>-n (use C type operands)</em></h4>
+    Use this option to have the disassembler output hexadecimal operands using C
+    notation, ie: 0xcd instead of the default 0cdh.&nbsp;
+    <h4><em>-o (output filename)</em></h4>
+    This option lets you specify the output filename, instead of the default
+    that is input filename postfixed with ".z80".<br>
+    <h4><em>-p (add dot in front of pseudo ops)</em></h4>
+    Some assemblers require pseudo operations to begin with a dot. Use this
+    option to have the disassembler output ".equ" instead of "equ" and similar
+    for org and other pseudo operations.&nbsp;
+    <h4><em>-s (set string pseudo op)</em></h4>
+    This option tells the disassembler to generate the pseudo ops 'db' and 'dw'
+    instead of 'defb' and 'defw' for those cross assemblers that may require
+    this.Use this option for cross assemblers that do not recognize 'defb' and
+    'defw'. If used in conjunction with the -a <span style="text-decoration: underline;"></span>
+    option , the -s option must preceed the -a option on the command line.
+    <h4><em>-t (trace and analyze code)</em></h4>
+    This option tells mdz80 to trace and analyze the Z80 code before
+    disassembling it. mdz80 will attempt to determine which parts of the code
+    are actually code, and which parts are ascii text, binary data, pointers,
+    etc. While it does a reasonably good job of analyzing the code on most
+    files, no program can do as good a job as a human programmer. A control file
+    with the same name as the hex or bin file, but with an extension of '.ctl',
+    will be created before the actual disassembly is performed. You can then
+    edit the control file to correct any erroneous directives, or to add new
+    directives. <br>
+    <br>
+    <em>Warning:</em> Using this option will <em>overwrite</em> any control
+    file that may already exist for the code file being disassembled. It is
+    intended to be used on the <em>first</em> disassembly only or until you
+    combine disassembly options in the right way to have a good starting point.
+    <br>
+    <h4><em>-T (presume code during trace)</em></h4>
+    This option is meaningful only in conjunction with -t option during initial
+    traces of the code. If you are disassembling very fragmented code or code
+    that cannot clearly traced from the beginning (i.e. a library) this can
+    easily confuse mdz80 produncing wrong output. -T option will instruct mdz80
+    to presume the all binary input that cant be exactly identified with code or
+    data must be considered as code and in this way disassembled.<br>
+    <h4><em>-v (be verbose)</em></h4>
+    Will inform you of the phases of disassembling.<br>
+    <h4><em>-V (print version)</em></h4>
+    Will print mdz80 version and then exit.<br>
+    <h4><em>-x (add hexadecimal offset to addresses)</em></h4>
+    This option causes the disassembler to add a hexadecimal offset to the
+    address of every location in the code file. This may be useful for
+    disassembling code that was read from the second (or subsequent) rom of a
+    set of roms. For example, suppose that binary data was obtained from a set
+    of 4K byte eproms (call them rom1 and rom2). Then the first file should be
+    disassembled with the command line:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -d rom1</td>
+        </tr>
+      </tbody>
+    </table>
+    and the second should be disassembled with the -x option:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mdz80 -d rom2 x1000</td>
+        </tr>
+      </tbody>
+    </table>
+    The two files then can be combined into one and all references within the
+    disassembled code will be to the correct addresses. <br>
+    <br>
+    If given on the command line, the -x option overrides any -o directive in
+    the control file. <br>
+    <em><br>
+      Control File Directives<br>
+      <br>
+    </em> Control directives tell the disassembler to treat specified areas of
+    the code to be disassembled as something other than executable code. The
+    user specifies control directives by editing (with any text editor) a
+    control file with the same name as the file to be disassembled, but with a
+    file extention of .ctl (eg: program.ctl to control the disassembly of the
+    file program.hex or program.bin). A generic control file called
+    'generic.ctl' is provided to get the user started. Copy 'generic.ctl' to
+    'file.ctl' where 'file' is the name of the binary or Intel hex file to be
+    disassembled, and modify as required based on the output of the
+    disassembler. Then run the disassembler again to get a more readable
+    disassembly of the code. <br>
+    <br>
+    All directives consist of a character that specifies the type of data,
+    followed by a hexadecimal number specifying the value or range of values of
+    the data. In the case of a label or symbol directive, the hexadecimal number
+    is followed by ascii text defining the label or symbol. See individual
+    directives for examples. All directives must be in the first column of the
+    line. Directives may be complete words, but only the first character is
+    significant, ie:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>Label</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>0</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>reset</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>and</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>looney</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>0</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>reset</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    will both generate the label "reset" for address 0. Note that they are not
+    case sensitive. <br>
+    <br>
+    Numerical values must be in hexadecimal and may optionally be preceeded by
+    "0x". For example, a hexadecimal number may be entered as "1234" or
+    "0x1234". Either will be interpreted as the number 1234H. <br>
+    <br>
+    Everything following a semi-colon (;) is a comment and will be ignored by
+    the disassembler. <br>
+    <br>
+    Label and symbol directives differ in that a label refers to an address and
+    a symbol refers to any 8 or 16 bit immediate data. <br>
+    Symbols apply only to immediate data. To specify a symbol for an Z80 data
+    memory location, use the R directive , or to force name substitution for an
+    operand at a given address, use the X directive. <br>
+    <br>
+    Single values are specified by entering just the value; ranges of values are
+    specified by a start and stop address separated by a dash (-), or by a start
+    address and count separated by a plus (+), ie:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>t 1000</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>the data at address 1000H is ascii text.</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>t 1000-1010</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>the data from address 1000H to (and including) address 1010H is
+            ascii text.</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>t 1000+6</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>ascii text starting at 1000H for 6 bytes.</td>
+        </tr>
+      </tbody>
+    </table>
+    Directives are processed in the order in which they are read from the
+    control file. Specifying an area as ascii data and then later specifying it
+    as data to be ignored (uninitialized data) will cause that area to not be
+    disassembled at all. Care must be taken in specifying areas in the control
+    file.&nbsp;
+    <h4><em>A Directive (address data)</em></h4>
+    Specifies that the address contains a word value corresponding to an address
+    for which a label should be generated. For example, a vector table may be
+    located at address 0x1000 containing four entries. The user can modify the
+    control file by adding the following entry:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>a 1000-1007</td>
+        </tr>
+      </tbody>
+    </table>
+    This will cause the disassembler to generate the following output lines:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>defw</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>vec1</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>defw</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>vec2</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>defw</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>vec3</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>defw</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>vec4</td>
+        </tr>
+      </tbody>
+    </table>
+    assuming that the control file also contains entries for the values found at
+    those addresses to generate the labels vec1 through vec4. The addresses
+    referenced will be flagged so that labels will be generated in the output
+    file at those addresses.&nbsp;
+    <h4><em>B Directive (byte binary data)</em></h4>
+    Specifies that the data is to be interpreted as 8 bit binary data. For
+    example:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>b 1000-1007</td>
+        </tr>
+      </tbody>
+    </table>
+    tells the disassembler that the data from address 1000H to 1007H should
+    generate the line:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>dwfb</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>0,1,2,3,4,5,6,7</td>
+        </tr>
+      </tbody>
+    </table>
+    assuming that the data at address 1000H and up is 00H, 01H, etc.&nbsp;
+    <h4><em>C Directive (code data)</em></h4>
+    Forces the disassembler to interpret the data as executable code. This may
+    be necessary because the disassembler skips over strings of 00H or ffH bytes
+    that occur since they are unlikely to be real code. However, sometimes
+    programmers insert several NOPs for timing purposes.&nbsp;
+    <h4><em>D Directive (define data type (label or symbol))</em></h4>
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>d address [0 or label]</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>search label table only</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>d address [1 or symbol]</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>search symbol table only</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>d address [2 or none]</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>don't search either table</td>
+        </tr>
+      </tbody>
+    </table>
+    Forces the disassembler to search only the label or symbol table. This
+    allows you to specify a label and a symbol for the same value. <br>
+    Note that the last parameter can be either a number (0, 1, or 2) or a word
+    (label, symbol, none). If the last parameter is a word, only the first
+    character is checked for L, S, or N, and is not case sensitive.
+    <h4><em>I Directive (ignore data)</em></h4>
+    Tells the disassembler to ignore a range of addresses that may be
+    initialized by the input file. This is useful when the input file is a
+    binary file generated by an eprom programmer that dumps the entire eprom
+    space. The valid data from a 4K eprom might only be, say, 3K in length. By
+    adding
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>i c00-fff</td>
+        </tr>
+      </tbody>
+    </table>
+    to the control file, you tell the disassembler to not disassemble the data
+    from address 0c00H to 0fffH.&nbsp;&nbsp;
+    <h4><em>L Directive (label definition)</em></h4>
+    Defines a label to the disassembler. Labels are generated in the output
+    disassembly file whenever a reference to the address is found and the label
+    exists in the label table. Suppose that address 0000H contains the code 01
+    43 (ajmp 0043H). Then the entry
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>l 43 start</td>
+        </tr>
+      </tbody>
+    </table>
+    in the control file will cause mdz80 to disassemble this code as:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>JP</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>start</td>
+        </tr>
+      </tbody>
+    </table>
+    rather than:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>JP</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>X0043</td>
+        </tr>
+      </tbody>
+    </table>
+    The code beginning at address 43H will then have the label 'start' in the
+    label field rather than the label 'X0043'. See the entry for the S directive
+    for an explanation of the difference between labels and symbols and also -e
+    command line option that can be used to automate this task.<br>
+    <em><br>
+      <span style="font-weight: bold;">N Directive (suppress address label
+        generation)</span></em> <br>
+    <br>
+    The disassembler will generate labels for addresses that are referenced by
+    code such as
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>A,6</td>
+        </tr>
+      </tbody>
+    </table>
+    If the operand represents a constant rather than an address, you can
+    suppress the automatic generation of a label (X0006) for address 6h by
+    entering
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>n 6</td>
+        </tr>
+      </tbody>
+    </table>
+    in the control file. You'd want to make sure that address 6h isn't
+    legitimately addressed by some other code before using this directive.&nbsp;
+    <h4><em>O Directive (add hexadecimal offset to addresses)</em></h4>
+    This directive causes the disassembler to add a hexadecimal offset to the
+    address of every location in the code file. See the -x option for details.
+    It will be overridden by any -x option specified on the command line. If the
+    -t option (trace and analyze code) is given on the command line, the O
+    directive has no effect since any existing control file will be rewritten.
+    In this case you must use the command line -x option to specify an
+    offset.&nbsp;
+    <h4><em>P Directive (patch inline code)</em></h4>
+    This directive is of dubious value, but has been added for anyone who might
+    find it useful. The P directive is similar to the comment directive except
+    that the user supplied string is patched into the output stream as <i>code</i>,
+    not as a comment. You could, for instance, patch in a macro definition or an
+    include statement. Patching in executable code is not a real good
+    idea.&nbsp;
+    <h4><em>S Directive (symbol definition)</em></h4>
+    Defines a symbol to the disassembler. Symbols are output to the disassembly
+    file whenever the value is encountered in the input file and the symbol
+    exists in the symbol table. The user can specify a symbol for a value by a
+    line such as:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>s 20 space</td>
+        </tr>
+      </tbody>
+    </table>
+    Code which uses this value, such as:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>A,20h</td>
+        </tr>
+      </tbody>
+    </table>
+    will then be disassembled as:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>A,SPACE</td>
+        </tr>
+      </tbody>
+    </table>
+    Labels and symbols differ in that a label applies to an address, whereas a
+    symbol applies to any 8 or 16 bit immediate data. For code which can only
+    refer to values, such as
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>A,20h</td>
+        </tr>
+      </tbody>
+    </table>
+    only the symbol table will be searched for a matching value. For code which
+    could refer to either an address or a value, such as:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>HL,(1234h)</td>
+        </tr>
+      </tbody>
+    </table>
+    the label table will be searched first, and only if no matching value is
+    found will the symbol table then be searched.&nbsp;
+    <h4><em>T Directive (text [ascii] data)</em></h4>
+    Forces the data in the range specified to be disassembled as text (ascii
+    data). Thus the code: 48 69 20 74 68 65 72 65 at address 1000H will be
+    disassembled as:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>DEFB</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>'Hi there'</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>or</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>ASCII</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>'Hi there'</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>(command line option -a used)</td>
+        </tr>
+      </tbody>
+    </table>
+    by putting the line:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>t 1000-1007</td>
+        </tr>
+      </tbody>
+    </table>
+    in the control file. Data specified by this directive is not checked to
+    verify that it really is ascii data--be careful.&nbsp;
+    <h4><em>W Directive (word binary data)</em></h4>
+    Specifies that the data is to be interpreted as 16 bit binary data. For
+    example:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>w 1000-1007</td>
+        </tr>
+      </tbody>
+    </table>
+    tells the disassembler that the data from address 1000H to 1007H should
+    generate the lines:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>DEFW</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>DEFW </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>DEFW </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>DEFW </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>3</td>
+        </tr>
+      </tbody>
+    </table>
+    assuming that the data at address 1000H and up is 00H, 00H, 00H, 01H, 00H,
+    02H, etc. This differs from the A (address) directive in that the A
+    directive also causes a reference to be made to the indirect address. In
+    other words, if the data at address 1000H is 1234H, the A directive will
+    cause a label (X1234) to be put in the output file at address 1234H, whereas
+    the W directive will not.&nbsp;
+    <h4><em>X Directive (specify name for operand data)</em></h4>
+    Specify a name for an operand at a particular address. This is similar to
+    the S directive except that it applies only to the given address. For
+    example, if the <em>symbol</em> 'CR' is defined as 0dh, every instance of
+    0dh as an operand will have the symbol 'CR' substituted. It may be, however,
+    that the value 0dh has a different meaning when used as an operand for a
+    particular instruction. The X directive allows you to modify the
+    interpretation of an operand at specific operand locations. Why not then use
+    the X directive exclusively? Because that would force you to place an X
+    directive in the control file for <em>every</em> instance in which that
+    value appeared as an operand. The S directive, defined only once for an
+    operand value, will substitute the symbol text for <em>every</em>
+    occurrance of that operand value unless overridden by the X directive. Note
+    that the address defined in the X directive is the address of the operand,
+    not the address of the instruction. For example:
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>X 102 loopinit</td>
+        </tr>
+      </tbody>
+    </table>
+    forces substitution of the text 'loopinit' for the operand located at
+    address 102h. Therefore an instruction that should be interpreted as
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>A,LOOPINIT</td>
+        </tr>
+      </tbody>
+    </table>
+    will not be disassembled as
+    <table summary="" cellspacing="5">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>LD</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>A,CR</td>
+        </tr>
+      </tbody>
+    </table>
+    if the control file contains the above x directive, and also contains an <a
+      href="#sdirective">S directive</a> defining 0dh as 'CR', and the value of
+    the operand for the mov instruction happens to also be 0dh. <a name="ydirective"></a>
+    <h4><em>Y Directive (specify name for operand data but suppress EQU
+        generation)</em></h4>
+    This is similar to the X directive except that the disassembler will not
+    generate an EQU statement for the operand value in the output file. This
+    should be used when you want to specify a name for an operand that is an
+    assembler pseudo-op such as LOW() or HIGH().&nbsp;
+    <h4><em># Directive (header comment string)</em></h4>
+    Defines a comment string to be output prior to disassembly at the specified
+    address. For example:<br>
+    <br>
+    <pre>        # 95
+        # 95 Start of initialization
+        # 95</pre>
+    <br>
+    <br>
+    in the ctl file would cause the output<br>
+    <br>
+    <pre>        ;
+        ; Start of initialization
+        ;
+                <span style="font-weight: bold;">LD</span>  A,80H           ;0095     3E 80     &gt;.</pre>
+    <br>
+    <br>
+    assuming that the code 'c2 af' was located at address 0x95. Since ASCII
+    strings consume prodigious amounts of memory, it is wise to use this
+    directive sparingly. It is, however, useful for marking blocks of code that
+    have been identified in previous runs of mdz80.&nbsp;
+    <h4><em>! Directive (inline comment string)</em></h4>
+    Defines a comment string to be output after disassembly at the specified
+    address. For example:<br>
+    <br>
+    <pre>        ! 95 Start of initialization</pre>
+    <br>
+    <br>
+    in the ctl file would cause the output<br>
+    <br>
+    <pre>                LD  A,80H           ;0095     3E 80     &gt;.    ; Start of initialization</pre>
+    <br>
+    <br>
+    for the above example. Note that inline comments are only available for code
+    and word data, and will do nothing if the data at the specified address is
+    defined as data other than code or word data (ascii text, for example). <br>
+    <br>
+    <br>
+    <br>
+    <br>
+  </body>
+</html>
